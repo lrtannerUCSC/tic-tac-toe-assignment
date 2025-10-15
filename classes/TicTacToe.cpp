@@ -68,6 +68,7 @@ void TicTacToe::setUpBoard()
             _grid[y][x].initHolder(ImVec2(x*100,y*100), "square.png", x, y);
         }
     }
+    setStateString("020001000");
     startGame();
 }
 
@@ -170,8 +171,8 @@ Player* TicTacToe::checkForWinner()
         {0, 3, 6},  // left column
         {1, 4, 7},  // middle column
         {2, 5, 8},  // right column
-        {0, 4, 8},  // diagonal \
-        {2, 4, 6}   // diagonal /
+        {0, 4, 8},  // diagonal
+        {2, 4, 6}   // diagonal
     };
 
     // Check each winning combination
@@ -195,8 +196,14 @@ bool TicTacToe::checkForDraw()
     // is the board full with no winner?
     // if any square is empty, return false
     // otherwise return true
+    for (int y = 0; y < _gameOptions.rowY; y++)
+    {
+        for (int x = 0; x < _gameOptions.rowX; x++) {
+            if (!_grid[y][x].bit()) return false;
+        }
+    }
 
-    return false;
+    return true;
 }
 
 //
@@ -204,7 +211,7 @@ bool TicTacToe::checkForDraw()
 //
 std::string TicTacToe::initialStateString()
 {
-    return "000000000";
+    return "020001000";
 }
 
 //
@@ -226,7 +233,22 @@ std::string TicTacToe::stateString() const
     // remember that player numbers are zero-based, so add 1 to get '1' or '2'
     // if the bit is null, add '0' to the string
     // finally, return the constructed string
-    return "000000000";
+    std::string state = "";
+    
+    for (int y = 0; y < _gameOptions.rowY; y++) {
+        for (int x = 0; x < _gameOptions.rowX; x++) {
+            Bit* bit = _grid[y][x].bit();
+            
+            if (bit != nullptr && bit->getOwner() != nullptr) {
+                int playerNum = bit->getOwner()->playerNumber() + 1;
+                state += std::to_string(playerNum);
+            } else {
+                state += "0";
+            }
+        }
+    }
+    
+    return state;
 }
 
 //
@@ -255,6 +277,30 @@ void TicTacToe::setStateString(const std::string &s)
     // loop through the 3x3 array and set each square accordingly
     // the string should always be valid, so you don't need to check its length or contents
     // but you can assume it will always be 9 characters long and only contain '0', '1', or '2'
+    // Clear existing pieces
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            _grid[y][x].destroyBit();
+        }
+    }
+    
+    // Restore state
+    int index = 0;
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            if (index >= s.length()) return;
+            
+            char cell = s[index++];
+            if (cell != '0') {
+                int playerNum = (cell - '1');  
+                
+                Bit* piece = PieceForPlayer(playerNum);
+                piece->setPosition(_grid[y][x].getPosition());
+                _grid[y][x].setBit(piece);
+            }
+        }
+    }
+    
 }
 
 
