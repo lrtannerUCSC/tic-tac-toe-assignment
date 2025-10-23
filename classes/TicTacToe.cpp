@@ -73,7 +73,7 @@ void TicTacToe::setUpBoard()
     if (gameHasAI()) {
         setAIPlayer(1); //idk if number 1 is right
     }
-    setStateString("000000000");
+    setStateString("020001000");
     startGame();
 }
 
