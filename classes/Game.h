@@ -104,5 +104,6 @@ public:
 	GameOptions 			_gameOptions;
 
 	int						_gameNumber;
+
 };
 

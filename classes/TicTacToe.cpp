@@ -25,8 +25,8 @@
 // The rest of the routines are written as “comment-first” TODOs for you to complete.
 // -----------------------------------------------------------------------------
 
-const int AI_PLAYER   = 1;      // index of the AI player (O)
-const int HUMAN_PLAYER= -1;      // index of the human player (X)
+const int AI_PLAYER   = -1;      // index of the AI player (O)
+const int HUMAN_PLAYER= 1;      // index of the human player (X)
 // set ai to 1 and human to -1
 
 TicTacToe::TicTacToe()
@@ -71,9 +71,9 @@ void TicTacToe::setUpBoard()
         }
     }
     if (gameHasAI()) {
-        setAIPlayer(1); //idk if number 1 is right
+        setAIPlayer(0); //idk if number 1 is right
     }
-    setStateString("020001000");
+    setStateString("000000000");
     startGame();
 }
 
@@ -216,7 +216,7 @@ bool TicTacToe::checkForDraw()
 //
 std::string TicTacToe::initialStateString()
 {
-    return "020001000";
+    return "000000000";
 }
 
 //
@@ -297,7 +297,7 @@ void TicTacToe::setStateString(const std::string &s)
             
             char cell = s[index++];
             if (cell != '0') {
-                int playerNum = (cell - '1');  
+                int playerNum = (cell - '0');  
                 
                 Bit* piece = PieceForPlayer(playerNum);
                 piece->setPosition(_grid[y][x].getPosition());
@@ -336,15 +336,15 @@ void TicTacToe::updateAI()
         int ycol = bestSquare / 3;
         BitHolder *holder = &_grid[ycol][xcol];
         actionForEmptyHolder(holder);
-        endTurn()
+        endTurn();
     }
 }
 
 bool aiBoardFull(const std::string& state) {
-    return state.find('0') != std::string::npos;
+    return state.find('0') == std::string::npos;
 }
 
-bool aiWinner(const std::string& state) // NOT FINISHED
+int aiWinner(const std::string& state) // NOT FINISHED
 {
     // check all the winning triples
     // if any of them have the same owner return that player
@@ -375,14 +375,13 @@ bool aiWinner(const std::string& state) // NOT FINISHED
 
     // Check each winning combination
     for (int i = 0; i < 8; i++) {
-        Player* p1 = ownerAt(winningTriples[i][0]);
-        Player* p2 = ownerAt(winningTriples[i][1]); 
-        Player* p3 = ownerAt(winningTriples[i][2]);
+        char p1 = state[winningTriples[i][0]];
+        char p2 = state[winningTriples[i][1]]; 
+        char p3 = state[winningTriples[i][2]];
         
-        // If all three positions have the same non-null owner, we have a winner!
-        if (p1 != nullptr && p1 == p2 && p2 == p3) {
-            // we don't care who won because its bad for recursive purposes
-            return 10;
+        // Check if all three positions have the same player and are not empty
+        if (p1 != '0' && p1 == p2 && p2 == p3) {
+            return (p1 == '2') ? 1 : -1;  // AI wins = +10, Human wins = -10
         }
     }
     // Hint: Consider using an array to store the winning combinations
@@ -390,30 +389,37 @@ bool aiWinner(const std::string& state) // NOT FINISHED
     return 0;
 }
 
-int TicTacToe::negamax(std::string& state, int depth, int playerColor) {
+int TicTacToe::negamax(std::string& state, int depth, int player) {
     _recursions++;
-    int bestVal = -1000;
-    int boardWinner = aiWinner(state);
-    if (boardWinner) {
-        //return the value to the recursion above, so negate it
-        // because its the opposite of what we want
-        return -boardWinner;
+    
+    // Check for terminal states
+    int winner = aiWinner(state);
+    if (winner != 0) {
+        return winner * (10 - depth);  // Prefer faster wins
     }
-    bool boardFull = aiBoardFull(state);
-    if (boardFull) {
+    
+    if (aiBoardFull(state)) {
         return 0;
     }
-
-    for (int i=0; i<9; i++) {
+    
+    int bestValue = -1000;
+    
+    for (int i = 0; i < 9; i++) {
         if (state[i] == '0') {
-            state[i] = playerColor == HUMAN_PLAYER ? '2' : '1';
-            int result = -negamax(state, depth+1, -playerColor);
-            if (result > bestVal) {
-                bestVal = result;
-            }
+            // Make move - current player places their piece
+            state[i] = (player == AI_PLAYER) ? '2' : '1';
+            
+            // Recursive call with opposite player
+            int value = -negamax(state, depth + 1, -player);
+            
+            // Undo move
             state[i] = '0';
+            
+            if (value > bestValue) {
+                bestValue = value;
+            }
         }
     }
-
-    return bestVal;
+    
+    return bestValue;
 }

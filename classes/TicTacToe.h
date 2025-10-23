@@ -27,14 +27,17 @@ public:
     bool        canBitMoveFrom(Bit*bit, BitHolder *src) override;
     bool        canBitMoveFromTo(Bit* bit, BitHolder*src, BitHolder*dst) override;
     void        stopGame() override;
+    int         negamax(std::string& state, int depth, int playerColor);
 
 	void        updateAI() override;
     bool        gameHasAI() override { return true; }
     BitHolder &getHolderAt(const int x, const int y) override { return _grid[y][x]; }
+    int			_recursions;
 private:
     Bit *       PieceForPlayer(const int playerNumber);
     Player*     ownerAt(int index ) const;
 
     Square      _grid[3][3];
+    
 };
 
