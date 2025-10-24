@@ -1,5 +1,6 @@
                 #include "TicTacToe.h"
                 #include <iostream>
+                #include <stdlib.h>
 
 // -----------------------------------------------------------------------------
 // TicTacToe.cpp
@@ -25,8 +26,8 @@
 // The rest of the routines are written as “comment-first” TODOs for you to complete.
 // -----------------------------------------------------------------------------
 
-const int AI_PLAYER   = -1;      // index of the AI player (O)
-const int HUMAN_PLAYER= 1;      // index of the human player (X)
+const int AI_PLAYER   = 1;      // index of the AI player (O)
+const int HUMAN_PLAYER= -1;      // index of the human player (X)
 // set ai to 1 and human to -1
 
 TicTacToe::TicTacToe()
@@ -45,7 +46,7 @@ Bit* TicTacToe::PieceForPlayer(const int playerNumber)
 {
     // depending on playerNumber load the "x.png" or the "o.png" graphic
     Bit *bit = new Bit();
-    bit->LoadTextureFromFile(playerNumber == 1 ? "x.png" : "o.png");
+    bit->LoadTextureFromFile(playerNumber == 0 ? "x.png" : "o.png");
     bit->setOwner(getPlayerAt(playerNumber));
     return bit;
 }
@@ -71,7 +72,7 @@ void TicTacToe::setUpBoard()
         }
     }
     if (gameHasAI()) {
-        setAIPlayer(0); //idk if number 1 is right
+        setAIPlayer(1); //idk if number 1 is right
     }
     setStateString("000000000");
     startGame();
@@ -153,46 +154,26 @@ Player* TicTacToe::ownerAt(int index ) const
 
 Player* TicTacToe::checkForWinner()
 {
-    // check all the winning triples
-    // if any of them have the same owner return that player
-    // winning triples are:
-    // 0,1,2
-    // 3,4,5
-    // 6,7,8
-    // 0,3,6
-    // 1,4,7
-    // 2,5,8
-    // 0,4,8
-    // 2,4,6
-    // you can use the ownerAt helper function to get the owner of a square
-    // for example, ownerAt(0) returns the owner of the top-left square
-    // if there is no bit in that square, it returns nullptr
-    // if you find a winning triple, return the player who owns that triple
-    // otherwise return nullptr
+    std::string currentState = stateString();
+    
     int winningTriples[8][3] = {
-        {0, 1, 2},  // top row
-        {3, 4, 5},  // middle row  
-        {6, 7, 8},  // bottom row
-        {0, 3, 6},  // left column
-        {1, 4, 7},  // middle column
-        {2, 5, 8},  // right column
-        {0, 4, 8},  // diagonal
-        {2, 4, 6}   // diagonal
+        {0, 1, 2}, {3, 4, 5}, {6, 7, 8},  // rows
+        {0, 3, 6}, {1, 4, 7}, {2, 5, 8},  // columns
+        {0, 4, 8}, {2, 4, 6}              // diagonals
     };
 
-    // Check each winning combination
     for (int i = 0; i < 8; i++) {
-        Player* p1 = ownerAt(winningTriples[i][0]);
-        Player* p2 = ownerAt(winningTriples[i][1]); 
-        Player* p3 = ownerAt(winningTriples[i][2]);
+        char p1 = currentState[winningTriples[i][0]];
+        char p2 = currentState[winningTriples[i][1]];
+        char p3 = currentState[winningTriples[i][2]];
         
-        // If all three positions have the same non-null owner, we have a winner!
-        if (p1 != nullptr && p1 == p2 && p2 == p3) {
-            return p1;
+        if (p1 != '0' && p1 == p2 && p2 == p3) {
+            // Convert state string player to Player object
+            int playerNum = (p1 == '1') ? 0 : 1;  // '1' = player 0, '2' = player 1
+            return getPlayerAt(playerNum);
         }
     }
-    // Hint: Consider using an array to store the winning combinations
-    // to avoid repetitive code
+    
     return nullptr;
 }
 
@@ -299,7 +280,7 @@ void TicTacToe::setStateString(const std::string &s)
             if (cell != '0') {
                 int playerNum = (cell - '0');  
                 
-                Bit* piece = PieceForPlayer(playerNum);
+                Bit* piece = PieceForPlayer(playerNum-1);
                 piece->setPosition(_grid[y][x].getPosition());
                 _grid[y][x].setBit(piece);
             }
@@ -314,23 +295,28 @@ void TicTacToe::setStateString(const std::string &s)
 //
 void TicTacToe::updateAI() 
 {
-    // we will implement the AI in the next assignment!
     int bestMove = -1000;
     int bestSquare = -1;
     _recursions = 0;
-    std::string state = stateString(); //get state
+    std::string state = stateString();
+    
+    std::cout << "AI thinking from state: " << state << std::endl;
+    
     for (int i=0; i<9; i++) {
-        if (state[i] =='0') { //check if square empty
+        if (state[i] =='0') {
             state[i] = '2';
             int result = -negamax(state, 0, HUMAN_PLAYER);
+            state[i] = '0';
+            
             if (result > bestMove) {
                 bestMove = result;
                 bestSquare = i;
             }
-            state[i] = '0';
         }
     }
 
+    std::cout << "AI completed " << _recursions << " recursions, chose square " << bestSquare << std::endl;
+    
     if (bestSquare != -1) {
         int xcol = bestSquare % 3;
         int ycol = bestSquare / 3;
@@ -344,7 +330,7 @@ bool aiBoardFull(const std::string& state) {
     return state.find('0') == std::string::npos;
 }
 
-int aiWinner(const std::string& state) // NOT FINISHED
+int aiWinner(const std::string& state)
 {
     // check all the winning triples
     // if any of them have the same owner return that player
@@ -391,18 +377,19 @@ int aiWinner(const std::string& state) // NOT FINISHED
 
 int TicTacToe::negamax(std::string& state, int depth, int player) {
     _recursions++;
+    // std::cout << "Recursions: " << _recursions << std::endl;
     
     // Check for terminal states
     int winner = aiWinner(state);
     if (winner != 0) {
-        return winner * (10 - depth);  // Prefer faster wins
+        return winner;
     }
     
     if (aiBoardFull(state)) {
         return 0;
     }
     
-    int bestValue = -1000;
+    int bestValue = -100000;
     
     for (int i = 0; i < 9; i++) {
         if (state[i] == '0') {
