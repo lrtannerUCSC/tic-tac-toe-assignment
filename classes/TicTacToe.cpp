@@ -305,7 +305,7 @@ void TicTacToe::updateAI()
     for (int i=0; i<9; i++) {
         if (state[i] =='0') {
             state[i] = '2';
-            int result = -negamax(state, 0, HUMAN_PLAYER);
+            int result = negamax(state, 0, AI_PLAYER);
             state[i] = '0';
             
             if (result > bestMove) {
@@ -367,7 +367,8 @@ int aiWinner(const std::string& state)
         
         // Check if all three positions have the same player and are not empty
         if (p1 != '0' && p1 == p2 && p2 == p3) {
-            return (p1 == '2') ? 1 : -1;  // AI wins = +10, Human wins = -10
+            if (p1 == '2') return +10;   // AI (we use '2' for AI)
+            if (p1 == '1') return -10;   // Human
         }
     }
     // Hint: Consider using an array to store the winning combinations
@@ -377,12 +378,11 @@ int aiWinner(const std::string& state)
 
 int TicTacToe::negamax(std::string& state, int depth, int player) {
     _recursions++;
-    // std::cout << "Recursions: " << _recursions << std::endl;
     
-    // Check for terminal states
+    // Check for terminal states - use your professor's approach
     int winner = aiWinner(state);
     if (winner != 0) {
-        return winner;
+        return winner-depth;
     }
     
     if (aiBoardFull(state)) {
@@ -393,10 +393,11 @@ int TicTacToe::negamax(std::string& state, int depth, int player) {
     
     for (int i = 0; i < 9; i++) {
         if (state[i] == '0') {
-            // Make move - current player places their piece
-            state[i] = (player == AI_PLAYER) ? '2' : '1';
+            // SIMPLIFIED: Always place the current player's piece
+            // The player parameter tells us whose turn it is
+            state[i] = (player == 1) ? '2' : '1';
             
-            // Recursive call with opposite player
+            // Recursive call with opposite player and negate the result
             int value = -negamax(state, depth + 1, -player);
             
             // Undo move
