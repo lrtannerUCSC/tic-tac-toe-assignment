@@ -300,7 +300,7 @@ void TicTacToe::updateAI()
     _recursions = 0;
     std::string state = stateString();
     
-    std::cout << "AI thinking from state: " << state << std::endl;
+    // std::cout << "AI thinking from state: " << state << std::endl;
     
     for (int i=0; i<9; i++) {
         if (state[i] =='0') {
@@ -315,7 +315,7 @@ void TicTacToe::updateAI()
         }
     }
 
-    std::cout << "AI completed " << _recursions << " recursions, chose square " << bestSquare << std::endl;
+    // std::cout << "AI completed " << _recursions << " recursions, chose square " << bestSquare << std::endl;
     
     if (bestSquare != -1) {
         int xcol = bestSquare % 3;
@@ -367,8 +367,7 @@ int aiWinner(const std::string& state)
         
         // Check if all three positions have the same player and are not empty
         if (p1 != '0' && p1 == p2 && p2 == p3) {
-            if (p1 == '2') return +10;   // AI (we use '2' for AI)
-            if (p1 == '1') return -10;   // Human
+            return 10;
         }
     }
     // Hint: Consider using an array to store the winning combinations
@@ -382,7 +381,7 @@ int TicTacToe::negamax(std::string& state, int depth, int player) {
     // Check for terminal states - use your professor's approach
     int winner = aiWinner(state);
     if (winner != 0) {
-        return winner-depth;
+        return player * (10-depth);
     }
     
     if (aiBoardFull(state)) {
@@ -393,7 +392,6 @@ int TicTacToe::negamax(std::string& state, int depth, int player) {
     
     for (int i = 0; i < 9; i++) {
         if (state[i] == '0') {
-            // SIMPLIFIED: Always place the current player's piece
             // The player parameter tells us whose turn it is
             state[i] = (player == 1) ? '2' : '1';
             
