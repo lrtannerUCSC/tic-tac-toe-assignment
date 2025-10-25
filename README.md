@@ -113,8 +113,3 @@ The Negamax implementation integrates with the game engine through:
 
 ### State Management
 The game maintains synchronization between the visual representation and the AI's state string representation, enabling seamless integration between user interactions and AI decision-making.
-
-## GitHub Repository
-**URL:** [Insert your GitHub repository URL here]
-
-This implementation demonstrates a practical application of the Negamax algorithm, showcasing how recursive game tree search can create perfect AI opponents in deterministic, perfect-information games like Tic-Tac-Toe. The solution provides both theoretical understanding and practical implementation of adversarial search algorithms.
