@@ -300,12 +300,12 @@ void TicTacToe::updateAI()
     _recursions = 0;
     std::string state = stateString();
     
-    // std::cout << "AI thinking from state: " << state << std::endl;
+    std::cout << "AI thinking from state: " << state << std::endl;
     
     for (int i=0; i<9; i++) {
         if (state[i] =='0') {
             state[i] = '2';
-            int result = negamax(state, 0, AI_PLAYER);
+            int result = -negamax(state, 0, HUMAN_PLAYER);
             state[i] = '0';
             
             if (result > bestMove) {
@@ -315,7 +315,7 @@ void TicTacToe::updateAI()
         }
     }
 
-    // std::cout << "AI completed " << _recursions << " recursions, chose square " << bestSquare << std::endl;
+    std::cout << "AI completed " << _recursions << " recursions, chose square " << bestSquare << std::endl;
     
     if (bestSquare != -1) {
         int xcol = bestSquare % 3;
@@ -367,7 +367,7 @@ int aiWinner(const std::string& state)
         
         // Check if all three positions have the same player and are not empty
         if (p1 != '0' && p1 == p2 && p2 == p3) {
-            return 10;
+            return 10; //(p1 == '2') ? 1 : -1;  // AI wins = +10, Human wins = -10
         }
     }
     // Hint: Consider using an array to store the winning combinations
@@ -377,11 +377,12 @@ int aiWinner(const std::string& state)
 
 int TicTacToe::negamax(std::string& state, int depth, int player) {
     _recursions++;
+    // std::cout << "Recursions: " << _recursions << std::endl;
     
-    // Check for terminal states - use your professor's approach
+    // Check for terminal states
     int winner = aiWinner(state);
     if (winner != 0) {
-        return player * (10-depth);
+        return -winner;
     }
     
     if (aiBoardFull(state)) {
@@ -392,10 +393,10 @@ int TicTacToe::negamax(std::string& state, int depth, int player) {
     
     for (int i = 0; i < 9; i++) {
         if (state[i] == '0') {
-            // The player parameter tells us whose turn it is
-            state[i] = (player == 1) ? '2' : '1';
+            // Make move - current player places their piece
+            state[i] = (player == AI_PLAYER) ? '2' : '1';
             
-            // Recursive call with opposite player and negate the result
+            // Recursive call with opposite player
             int value = -negamax(state, depth + 1, -player);
             
             // Undo move
